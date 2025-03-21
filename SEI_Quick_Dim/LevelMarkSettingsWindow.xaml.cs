@@ -14,7 +14,7 @@ namespace SEI_Quick_Dim
         public bool IsLeftPosition { get; private set; } = true;
         public double OffsetDistance { get; private set; } = 300.0;
         public double VerticalOffset { get; private set; } = 200.0;
-        public double FontHeight { get; private set; } = 3.5;
+        public double FontHeight { get; private set; } = 2.5;
         public DrawingColors TextColor { get; private set; } = DrawingColors.Black;
 
         // 前缀和后缀列表

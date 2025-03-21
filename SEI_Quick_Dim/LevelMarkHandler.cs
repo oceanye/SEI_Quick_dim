@@ -134,7 +134,7 @@ namespace SEI_Quick_Dim
                         // 标记点位置 - 实际标记的位置为用户选择的点，仅添加垂直偏移
                         Point markPoint = new Point(
                             basePoint.X-1500+xOffset,
-                            basePoint.Y+1500+yOffset*3, 
+                            basePoint.Y + 1500 + (yOffset * 3 * settingsWindow.FontHeight / 3.5),
                             basePoint.Z);
                         
                         // 确定LeaderLine的偏移方向

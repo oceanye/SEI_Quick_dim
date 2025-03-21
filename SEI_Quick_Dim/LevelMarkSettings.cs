@@ -16,13 +16,13 @@ namespace SEI_Quick_Dim
         public bool IsLeftPosition { get; set; } = true;
         public double OffsetDistance { get; set; } = 50.0;
         public double VerticalOffset { get; set; } = 200.0;
-        public double FontHeight { get; set; } = 3.5;
+        public double FontHeight { get; set; } = 2.5;
         
         // 前缀设置
         public List<string> Prefixes { get; set; } = new List<string> { "EL.", "OTM.", "EL.", "OTM.", "EL.", "OTM." };
         
         // 后缀设置
-        public List<string> Postfixes { get; set; } = new List<string> { "BOB", "BOB", "TOC", "TOC", "BOC", "BOC" };
+        public List<string> Postfixes { get; set; } = new List<string> { " BOB", " BOB", " TOC", " TOC", " BOC", " BOC" };
         
         // 设置文件的默认保存路径
         private static readonly string DefaultSettingsFolder = Path.Combine(
