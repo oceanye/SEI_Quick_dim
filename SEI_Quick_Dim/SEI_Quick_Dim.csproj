@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Reference Include="Tekla.Common.Geometry">
+      <HintPath>..\..\..\..\..\..\Program Files\Tekla Structures\2024.0\bin\Tekla.Common.Geometry.dll</HintPath>
+    </Reference>
+    <Reference Include="Tekla.Structures">
+      <HintPath>..\..\..\..\..\..\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.dll</HintPath>
+    </Reference>
+    <Reference Include="Tekla.Structures.Catalogs">
+      <HintPath>..\..\..\..\..\..\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.Catalogs.dll</HintPath>
+    </Reference>
+    <Reference Include="Tekla.Structures.Datatype">
+      <HintPath>..\..\..\..\..\..\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.Datatype.dll</HintPath>
+    </Reference>
+    <Reference Include="Tekla.Structures.Dialog">
+      <HintPath>..\..\..\..\..\..\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.Dialog.dll</HintPath>
+    </Reference>
+    <Reference Include="Tekla.Structures.Drawing">
+      <HintPath>..\..\..\..\..\..\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="Tekla.Structures.Model">
+      <HintPath>..\..\..\..\..\..\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.Model.dll</HintPath>
+    </Reference>
+    <Reference Include="Tekla.Structures.ObjectDimensioningModel">
+      <HintPath>..\..\..\..\..\..\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.ObjectDimensioningModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Tekla.Structures.Service">
+      <HintPath>..\..\..\..\..\..\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.Service.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
