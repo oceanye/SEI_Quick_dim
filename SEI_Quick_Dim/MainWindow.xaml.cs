@@ -13,13 +13,15 @@ using TeklaDrawing = Tekla.Structures.Drawing;
 using Tekla.Structures.Drawing;
 using Tekla.Structures.Drawing.Tools;
 using Tekla.Structures.Drawing.UI;
-using Tekla.Structures.Model;
+using TeklaModel = Tekla.Structures.Model;
 using Tekla.Structures.Geometry3d;
 using System.Windows.Markup;
 using Tekla.Structures;
 using Tekla.Structures.Dialog;
 using Point = Tekla.Structures.Geometry3d.Point;
 using Vector = Tekla.Structures.Geometry3d.Vector;
+using WinForms = System.Windows.Forms;
+using MessageBox = System.Windows.MessageBox;
 
 namespace SEI_Quick_Dim
 {
@@ -47,7 +49,7 @@ namespace SEI_Quick_Dim
                 try
                 {
                     Logger.Log("尝试连接到 Tekla Structures 模型...");
-                    var model = new Tekla.Structures.Model.Model();
+                    var model = new TeklaModel.Model();
                     if (model.GetConnectionStatus())
                     {
                         Logger.Log("成功连接到 Tekla Structures 模型");
@@ -149,7 +151,7 @@ namespace SEI_Quick_Dim
             {
                 // 同时检查模型和绘图连接
                 Logger.Log("检查Tekla连接状态...");
-                var model = new Tekla.Structures.Model.Model();
+                var model = new TeklaModel.Model();
                 TeklaDrawing.DrawingHandler drawingHandler = new TeklaDrawing.DrawingHandler();
                 
                 string statusMessage = "";
@@ -244,6 +246,164 @@ namespace SEI_Quick_Dim
             }
         }
         
+        private async void BatchExportDwgButton_Click(object sender, RoutedEventArgs e)
+        {
+            Logger.Log("BatchExportDwgButton_Click 被调用");
+            StatusTextBlock.Text = "选择包含Tekla项目的文件夹...";
+
+            var folderDialog = new WinForms.FolderBrowserDialog();
+            folderDialog.Description = "选择包含Tekla项目的文件夹";
+            
+            if (folderDialog.ShowDialog() == WinForms.DialogResult.OK)
+            {
+                string selectedPath = folderDialog.SelectedPath;
+                Logger.Log($"选择的文件夹路径: {selectedPath}");
+                
+                try
+                {
+                    await Task.Run(() => ProcessTeklaProjects(selectedPath));
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError("批量导出DWG时发生错误", ex);
+                    StatusTextBlock.Text = "批量导出DWG时发生错误";
+                    MessageBox.Show($"处理过程中发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ProcessTeklaProjects(string rootPath)
+        {
+            // 查找所有的 .db1 文件（Tekla模型文件）
+            var modelFiles = Directory.GetFiles(rootPath, "*.db1", SearchOption.AllDirectories);
+            
+            foreach (var modelFile in modelFiles)
+            {
+                try
+                {
+                    string modelFolder = Path.GetDirectoryName(modelFile);
+                    Logger.Log($"处理模型: {modelFolder}");
+                    
+                    // 更新UI状态
+                    Dispatcher.Invoke(() => StatusTextBlock.Text = $"正在处理: {Path.GetFileName(modelFolder)}");
+
+                    // 打开模型
+                    var model = new TeklaModel.Model();
+                    if (!model.GetConnectionStatus())
+                    {
+                        Logger.Log($"无法打开模型: {modelFolder}");
+                        continue;
+                    }
+
+                    // 等待模型加载完成
+                    Thread.Sleep(5000);
+
+                    // 创建绘图处理器
+                    var drawingHandler = new TeklaDrawing.DrawingHandler();
+                    
+                    // 获取所有绘图
+                    TeklaDrawing.DrawingEnumerator drawings = drawingHandler.GetDrawings();
+                    
+                    // 创建导出文件夹
+                    string exportFolder = Path.Combine(modelFolder, "DWG_Export");
+                    Directory.CreateDirectory(exportFolder);
+
+                    while (drawings.MoveNext())
+                    {
+                        var drawing = drawings.Current;
+                        if (drawing != null)
+                        {
+                            string dwgPath = Path.Combine(exportFolder, $"{drawing.Name}.dwg");
+                            Logger.Log($"导出绘图: {drawing.Name} 到 {dwgPath}");
+
+                            try
+                            {
+                                // 打开绘图
+                                drawingHandler.SetActiveDrawing(drawing);
+                                
+                                // 使用DrawingHandler导出DWG
+                                var drawingObject = drawingHandler.GetActiveDrawing();
+                                if (drawingObject != null)
+                                {
+                                    // 设置导出选项
+                                    var fileName = Path.GetFileName(dwgPath);
+                                    var dirName = Path.GetDirectoryName(dwgPath);
+                                    
+                                    // 创建DWG导出目录
+                                    Directory.CreateDirectory(dirName);
+                                    
+                                    // 使用DrawingItem导出DWG
+                                    var drawingItem = new Tekla.Structures.Catalogs.DrawingItem();
+                                    if (drawingItem.Select(drawing.Name))
+                                    {
+                                        string exportPath = dwgPath;
+                                        if (drawingItem.Export(ref exportPath))
+                                        {
+                                            Logger.Log($"成功导出: {dwgPath}");
+                                        }
+                                        else
+                                        {
+                                            Logger.Log($"导出失败: {dwgPath}");
+                                            
+                                            // 尝试在可能的位置查找文件
+                                            var possiblePaths = new[]
+                                            {
+                                                Path.Combine(modelFolder, $"{drawing.Name}.dwg"),
+                                                Path.Combine(modelFolder, "drawings", $"{drawing.Name}.dwg"),
+                                                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Tekla Structures", "drawings", $"{drawing.Name}.dwg"),
+                                                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Tekla Structures", $"{drawing.Name}.dwg"),
+                                                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"{drawing.Name}.dwg"),
+                                                Path.Combine(modelFolder, "..", "drawings", $"{drawing.Name}.dwg"),
+                                                Path.Combine(modelFolder, "..", "..", "drawings", $"{drawing.Name}.dwg"),
+                                                Path.Combine(modelFolder, "..", "..", $"{drawing.Name}.dwg"),
+                                                exportPath
+                                            };
+                                            
+                                            // 记录所有可能的路径
+                                            Logger.Log($"搜索DWG文件路径: {string.Join(Environment.NewLine, possiblePaths)}");
+                                            
+                                            var sourceFile = possiblePaths.FirstOrDefault(File.Exists);
+                                            if (sourceFile != null)
+                                            {
+                                                File.Copy(sourceFile, dwgPath, true);
+                                                Logger.Log($"找到并复制文件从: {sourceFile}");
+                                            }
+                                            else
+                                            {
+                                                Logger.Log($"未找到源文件");
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Logger.Log($"无法选择绘图: {drawing.Name}");
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError($"导出绘图 {drawing.Name} 时发生错误", ex);
+                            }
+                        }
+                    }
+
+                    // 关闭模型
+                    model.CommitChanges();
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"处理模型文件 {modelFile} 时发生错误", ex);
+                }
+            }
+
+            // 完成处理
+            Dispatcher.Invoke(() => 
+            {
+                StatusTextBlock.Text = "批量导出DWG完成";
+                MessageBox.Show("批量导出DWG完成！", "完成", MessageBoxButton.OK, MessageBoxImage.Information);
+            });
+        }
+
         private void LogButton_Click(object sender, RoutedEventArgs e)
         {
             try

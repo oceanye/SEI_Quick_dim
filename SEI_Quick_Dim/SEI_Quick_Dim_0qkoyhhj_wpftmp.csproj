@@ -1,0 +1,61 @@
+<Project>
+  <PropertyGroup>
+    <AssemblyName>SEI_Quick_Dim</AssemblyName>
+    <IntermediateOutputPath>obj\Debug\</IntermediateOutputPath>
+    <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>C:\Users\Ye\source\repos\SEI_Quick_Dim\SEI_Quick_Dim\obj\</MSBuildProjectExtensionsPath>
+    <_TargetAssemblyProjectName>SEI_Quick_Dim</_TargetAssemblyProjectName>
+    <RootNamespace>SEI_Quick_Dim</RootNamespace>
+  </PropertyGroup>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\mscorlib.dll" />
+    <ReferencePath Include="C:\Users\Ye\.nuget\packages\newtonsoft.json\13.0.3\lib\net45\Newtonsoft.Json.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\PresentationCore.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\PresentationFramework.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Core.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Data.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Drawing.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.IO.Compression.FileSystem.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Numerics.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Runtime.Serialization.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Windows.Controls.Ribbon.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Xaml.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Xml.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Xml.Linq.dll" />
+    <ReferencePath Include="C:\Program Files\Tekla Structures\2024.0\bin\Tekla.Common.Geometry.dll" />
+    <ReferencePath Include="C:\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.Catalogs.dll" />
+    <ReferencePath Include="C:\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.Datatype.dll" />
+    <ReferencePath Include="C:\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.Dialog.dll" />
+    <ReferencePath Include="C:\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.dll" />
+    <ReferencePath Include="C:\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.Drawing.dll" />
+    <ReferencePath Include="C:\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.Model.dll" />
+    <ReferencePath Include="C:\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.ObjectDimensioningModel.dll" />
+    <ReferencePath Include="C:\Program Files\Tekla Structures\2024.0\bin\Tekla.Structures.Service.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\UIAutomationClient.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\UIAutomationClientsideProviders.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\UIAutomationProvider.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\UIAutomationTypes.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\WindowsBase.dll" />
+    <ReferencePath Include="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\Facades\netstandard.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="C:\Users\Ye\source\repos\SEI_Quick_Dim\SEI_Quick_Dim\obj\Debug\net48\DimensionSettingsWindow.g.cs" />
+    <Compile Include="C:\Users\Ye\source\repos\SEI_Quick_Dim\SEI_Quick_Dim\obj\Debug\net48\LevelMarkSettingsWindow.g.cs" />
+    <Compile Include="C:\Users\Ye\source\repos\SEI_Quick_Dim\SEI_Quick_Dim\obj\Debug\net48\MainWindow.g.cs" />
+    <Compile Include="C:\Users\Ye\source\repos\SEI_Quick_Dim\SEI_Quick_Dim\obj\Debug\net48\RebarMarkSettingsWindow.g.cs" />
+    <Compile Include="C:\Users\Ye\source\repos\SEI_Quick_Dim\SEI_Quick_Dim\obj\Debug\net48\App.g.cs" />
+  </ItemGroup>
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+</Project>

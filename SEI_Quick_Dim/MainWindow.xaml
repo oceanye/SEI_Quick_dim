@@ -4,9 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Tekla Drawing 快速标注工具" Height="450" Width="500" WindowStartupLocation="CenterScreen">
+        Title="Tekla Drawing 快速标注工具 v3.0" Height="550" Width="500" WindowStartupLocation="CenterScreen">
     <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="137*"/>
+            <ColumnDefinition Width="343*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
@@ -15,22 +21,28 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Button Grid.Row="0" Content="1. 快速标高标记" Margin="5" Padding="10" 
-                Click="QuickLevelMarkButton_Click" FontSize="14"/>
+        <Button Grid.Row="0" Content="1. 快速标高标记" Margin="5,5,5,5" Padding="10" 
+                Click="QuickLevelMarkButton_Click" FontSize="14" Grid.ColumnSpan="2"/>
 
-        <Button Grid.Row="1" Content="2. 快速尺寸标注" Margin="5" Padding="10" 
-                Click="QuickDimensionButton_Click" FontSize="14"/>
+        <Button Grid.Row="1" Content="2. 快速尺寸标注" Margin="5,5,5,5" Padding="10" 
+                Click="QuickDimensionButton_Click" FontSize="14" Grid.ColumnSpan="2"/>
 
-        <Button Grid.Row="2" Content="3. 批量钢筋标记" Margin="5" Padding="10" 
-                Click="BatchRebarMarkButton_Click" FontSize="14"/>
+        <Button Grid.Row="2" Content="3. 批量钢筋标记" Margin="5,5,5,5" Padding="10" 
+                Click="BatchRebarMarkButton_Click" FontSize="14" Grid.ColumnSpan="2"/>
 
-        <Button Grid.Row="3" Content="4. 检查Tekla连接状态" Margin="5" Padding="10" 
-                Click="CheckConnectionButton_Click" FontSize="14" Background="LightGreen"/>
+        <Button Grid.Row="3" Content="4. 检查Tekla连接状态" Margin="5,5,5,5" Padding="10" 
+                Click="CheckConnectionButton_Click" FontSize="14" Background="LightGreen" Grid.ColumnSpan="2"/>
 
-        <TextBlock x:Name="StatusTextBlock" Grid.Row="4" Text="" 
-                   HorizontalAlignment="Center" Margin="0,10,0,0" FontWeight="Bold"/>
-                   
-        <TextBlock Grid.Row="5" Text="Tekla 2024 Drawing 标注工具 v1.0" 
-                   HorizontalAlignment="Center" Margin="0,10,0,0" Foreground="Gray"/>
+        <Button Grid.Row="4" Content="5. 批量导出DWG" Margin="5,5,5,5" Padding="10" 
+                Click="BatchExportDwgButton_Click" FontSize="14" Background="LightBlue" Grid.ColumnSpan="2"/>
+
+        <Button Grid.Row="5" Content="6. 查看日志文件" Margin="5,5,5,5" Padding="5" 
+                Click="LogButton_Click" FontSize="12" Background="LightYellow" Grid.ColumnSpan="2"/>
+
+        <TextBlock x:Name="StatusTextBlock" Grid.Row="6" Text="" 
+                   HorizontalAlignment="Left" Margin="103,10,0,25" FontWeight="Bold" Grid.Column="1"/>
+
+        <TextBlock Grid.Row="7" Text="Tekla 2024 Drawing 标注工具 v1.0" 
+                   HorizontalAlignment="Left" Margin="7,10,0,0" Foreground="Gray" Grid.Column="1"/>
     </Grid>
 </Window>

@@ -84,7 +84,7 @@ namespace SEI_Quick_Dim
             Logger.Log($"将选择{pointCount}个点");
             
             // 用于收集用户选择的点
-            List<(ViewBase ViewBase, Point Point)> pickedPoints = new List<(ViewBase, Point)>();
+            List<(ViewBase View, Point Point)> pickedPoints = new List<(ViewBase, Point)>();
             
             // 提示用户选择点
             for (int i = 0; i < pointCount; i++)
@@ -99,7 +99,7 @@ namespace SEI_Quick_Dim
                     return;
                 }
                 
-                pickedPoints.Add((pickedPoint.ViewBase, pickedPoint.Point));
+                pickedPoints.Add((pickedPoint.View, pickedPoint.Point));
                 Logger.Log($"用户选择的点{i+1}: X={pickedPoint.Point.X}, Y={pickedPoint.Point.Y}, Z={pickedPoint.Point.Z}");
             }
             
@@ -109,7 +109,7 @@ namespace SEI_Quick_Dim
             
             for (int pointIndex = 0; pointIndex < pickedPoints.Count; pointIndex++)
             {
-                ViewBase viewBase = pickedPoints[pointIndex].ViewBase;
+                ViewBase view = pickedPoints[pointIndex].View;
                 Point basePoint = pickedPoints[pointIndex].Point;
                 
                 // 获取Z坐标作为标高值
@@ -133,8 +133,8 @@ namespace SEI_Quick_Dim
 
                         // 标记点位置 - 实际标记的位置为用户选择的点，仅添加垂直偏移
                         Point markPoint = new Point(
-                            basePoint.X-1500+xOffset,
-                            basePoint.Y + 1500 + (yOffset * 3 * settingsWindow.FontHeight / 3.5),
+                            basePoint.X+500+xOffset,
+                            basePoint.Y + 1500 + (yOffset *  settingsWindow.FontHeight / 3.5),
                             basePoint.Z);
                         
                         // 确定LeaderLine的偏移方向
@@ -151,11 +151,13 @@ namespace SEI_Quick_Dim
                         
                         // 创建标高标记
                         LeaderLinePlacing leaderLine = new LeaderLinePlacing(leaderLinePoint);
-                        LevelMark levelMark = new LevelMark(viewBase, markPoint, leaderLinePoint);
+                        LevelMark levelMark = new LevelMark(view, markPoint, leaderLinePoint);
                         
                         // 设置标高标记属性
                         levelMark.Attributes.Font.Height = settingsWindow.FontHeight;
 
+
+                        levelMark.Attributes.ArrowHead.Head = ArrowheadTypes.FilledArrow;
 
                         if (markIndex == 1)
                             // 设置 Leader Line 为无
