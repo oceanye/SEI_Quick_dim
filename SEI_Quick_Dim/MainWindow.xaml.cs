@@ -246,29 +246,23 @@ namespace SEI_Quick_Dim
             }
         }
         
-        private async void BatchExportDwgButton_Click(object sender, RoutedEventArgs e)
+        private void BatchExportDwgButton_Click(object sender, RoutedEventArgs e)
         {
             Logger.Log("BatchExportDwgButton_Click 被调用");
-            StatusTextBlock.Text = "选择包含Tekla项目的文件夹...";
-
-            var folderDialog = new WinForms.FolderBrowserDialog();
-            folderDialog.Description = "选择包含Tekla项目的文件夹";
-            
-            if (folderDialog.ShowDialog() == WinForms.DialogResult.OK)
+            StatusTextBlock.Text = "正在打开批量导出DWG窗口...";
+            try
             {
-                string selectedPath = folderDialog.SelectedPath;
-                Logger.Log($"选择的文件夹路径: {selectedPath}");
-                
-                try
-                {
-                    await Task.Run(() => ProcessTeklaProjects(selectedPath));
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError("批量导出DWG时发生错误", ex);
-                    StatusTextBlock.Text = "批量导出DWG时发生错误";
-                    MessageBox.Show($"处理过程中发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                BatchExportDwgWindow exportWindow = new BatchExportDwgWindow();
+                exportWindow.Owner = this; // Optional: Set owner for modality behavior
+                exportWindow.ShowDialog(); // Use ShowDialog for a modal window or Show() for non-modal
+                StatusTextBlock.Text = "批量导出DWG窗口已关闭"; // Update status after window closes
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("打开批量导出DWG窗口失败", ex);
+                StatusTextBlock.Text = "打开批量导出DWG窗口失败";
+                MessageBox.Show($"打开窗口出错，详细信息请查看日志文件。\n\n日志文件位置: {Logger.LogFilePath}",
+                               "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
