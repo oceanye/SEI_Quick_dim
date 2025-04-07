@@ -10,6 +10,7 @@ using DrawingColors = Tekla.Structures.Drawing.DrawingColors;
 using TeklaDrawing = Tekla.Structures.Drawing;
 using Point = Tekla.Structures.Geometry3d.Point;
 using DrawingLine = Tekla.Structures.Drawing.Line;
+using Grid = Tekla.Structures.Drawing.Grid; // Explicitly specify Tekla Grid to avoid ambiguity
 
 namespace SEI_Quick_Dim
 {
@@ -63,22 +64,99 @@ namespace SEI_Quick_Dim
                     return;
                 }
                 
-                // 使用PickObjectsArea方法框选对象
-                Logger.Log("请框选要标注的对象");
-                List<DrawingObject> selectedObjects = SelectObjectsWithArea(picker, selectedView);
+                // 提示用户选择两个轴网
+                Logger.Log("请选择两个轴网 (Grid) 对象");
+                MessageBox.Show("请选择两个轴网 (Grid) 对象", "选择轴网", MessageBoxButton.OK, MessageBoxImage.Information);
                 
-                if (selectedObjects == null || selectedObjects.Count == 0)
+                List<Grid> selectedGrids = new List<Grid>();
+                
+                // 选择第一个轴网
+                try
                 {
-                    Logger.Log("未选择任何对象。");
-                    MessageBox.Show("未选择任何对象。");
+                    DrawingObject pickedObject = DrawingToolsExtensions.PickObject(picker, "请选择第一个轴网");
+                    if (pickedObject is Grid grid1)
+                    {
+                        selectedGrids.Add(grid1);
+                        Logger.Log("已选择第一个轴网");
+                    }
+                    else
+                    {
+                        MessageBox.Show("所选对象不是轴网，请重新选择。");
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError("选择第一个轴网时出错", ex);
+                    MessageBox.Show($"选择轴网时出错：{ex.Message}");
                     return;
                 }
                 
-                Logger.Log($"选择了 {selectedObjects.Count} 个对象。");
+                // 选择第二个轴网
+                try
+                {
+                    DrawingObject pickedObject = DrawingToolsExtensions.PickObject(picker, "请选择第二个轴网");
+                    if (pickedObject is Grid grid2)
+                    {
+                        selectedGrids.Add(grid2);
+                        Logger.Log("已选择第二个轴网");
+                    }
+                    else
+                    {
+                        MessageBox.Show("所选对象不是轴网，请重新选择。");
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError("选择第二个轴网时出错", ex);
+                    MessageBox.Show($"选择轴网时出错：{ex.Message}");
+                    return;
+                }
+                
+                // 使用PickObject方法多次选择几何对象
+                Logger.Log("请选择要标注的几何对象");
+                MessageBox.Show("请依次选择要标注尺寸的几何对象，完成后按ESC键。", "选择对象", MessageBoxButton.OK, MessageBoxImage.Information);
+                
+                List<DrawingObject> selectedGeometricObjects = new List<DrawingObject>();
+                bool continueSelecting = true;
+                
+                while (continueSelecting)
+                {
+                    try
+                    {
+                        DrawingObject pickedObject = DrawingToolsExtensions.PickObject(picker, "请选择要标注尺寸的几何对象（完成后按ESC键）");
+                        if (pickedObject != null)
+                        {
+                            selectedGeometricObjects.Add(pickedObject);
+                            Logger.Log($"添加几何对象：{pickedObject.GetType().Name}");
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // 用户按ESC结束选择，这是正常流程
+                        continueSelecting = false;
+                        Logger.Log("用户完成了几何对象选择");
+                    }
+                }
+                
+                // 合并所有对象
+                List<DrawingObject> allSelectedObjects = new List<DrawingObject>();
+                allSelectedObjects.AddRange(selectedGrids.Cast<DrawingObject>());
+                allSelectedObjects.AddRange(selectedGeometricObjects);
+                
+                if (allSelectedObjects.Count < 2)
+                {
+                    Logger.Log("选择的对象不足，无法创建尺寸标注。");
+                    MessageBox.Show("至少需要选择2个对象来创建尺寸标注。");
+                    return;
+                }
+                
+                Logger.Log($"总共选择了 {allSelectedObjects.Count} 个对象。");
                 
                 // 显示尺寸标注设置窗口
                 var settingsWindow = new DimensionSettingsWindow();
-                settingsWindow.SetSelectedObjects(selectedObjects);
+                settingsWindow.SetSelectedObjects(allSelectedObjects);
                 
                 if (settingsWindow.ShowDialog() != true)
                 {
@@ -92,14 +170,14 @@ namespace SEI_Quick_Dim
                 // 获取所有中心点
                 List<Point> centerPoints = _settings.CenterPoints;
                 
-                if (centerPoints.Count == 0)
+                if (centerPoints.Count < 2)
                 {
-                    Logger.Log("没有有效的中心点，无法创建尺寸标注。");
-                    MessageBox.Show("没有有效的中心点，无法创建尺寸标注。");
+                    Logger.Log("有效的中心点不足，无法创建尺寸标注。");
+                    MessageBox.Show("有效的中心点不足，无法创建尺寸标注。");
                     return;
                 }
                 
-                // 排序中心点（按X或Y坐标）
+                // 询问用户选择标注方向
                 Logger.Log("选择尺寸线的方向（垂直或水平）。");
                 DrawingToolsExtensions.PickedPoint directionPoint = null;
                 try
@@ -138,8 +216,8 @@ namespace SEI_Quick_Dim
                     Logger.Log("创建垂直尺寸线，按X坐标排序中心点。");
                 }
                 
-                // 创建尺寸线
-                CreateFallbackDimension(centerPoints, directionPoint.Point, isHorizontal, _settings.TextHeight, selectedView);
+                // 创建直线尺寸标注
+                CreateDimensionLineSet(centerPoints, directionPoint.Point, isHorizontal, _settings.TextHeight, selectedView);
                 
                 // 记录成功创建
                 Logger.Log("成功创建尺寸标注。");
@@ -149,76 +227,6 @@ namespace SEI_Quick_Dim
                 Logger.LogError("创建尺寸标注时出错", ex);
                 MessageBox.Show($"创建尺寸标注时出错：{ex.Message}\n{ex.StackTrace}");
             }
-        }
-        
-        /// <summary>
-        /// 使用框选方式选择对象
-        /// </summary>
-        /// <param name="picker">绘图对象选择器</param>
-        /// <param name="view">当前视图</param>
-        /// <returns>选中的对象列表</returns>
-        private static List<DrawingObject> SelectObjectsWithArea(Picker picker, TeklaDrawing.ViewBase view)
-        {
-            Logger.Log("尝试使用框选方式选择对象");
-            List<DrawingObject> selectedObjects = new List<DrawingObject>();
-            
-            try
-            {
-                // 尝试使用反射调用PickObjectsArea方法
-                var pickAreaMethod = picker.GetType().GetMethod("PickObjectsArea");
-                if (pickAreaMethod != null)
-                {
-                    var result = pickAreaMethod.Invoke(picker, new object[] { "请框选要标注尺寸的对象" });
-                    if (result is ArrayList areaPickResult && areaPickResult.Count > 0)
-                    {
-                        Logger.Log($"框选成功，获取到 {areaPickResult.Count} 个对象");
-                        
-                        foreach (var obj in areaPickResult)
-                        {
-                            if (obj is DrawingObject drawingObject)
-                            {
-                                selectedObjects.Add(drawingObject);
-                                Logger.Log($"添加对象：{drawingObject.GetType().Name}");
-                            }
-                        }
-                        
-                        return selectedObjects;
-                    }
-                }
-                
-                // 如果PickObjectsArea不可用，回退到多次单选
-                Logger.Log("框选方法不可用，回退到单对象选择模式");
-                MessageBox.Show("框选功能不可用，将使用单对象选择模式。\n请依次选择要标注尺寸的对象，完成后按ESC键。");
-                
-                bool continueSelecting = true;
-                while (continueSelecting)
-                {
-                    try
-                    {
-                        var pickResult = DrawingToolsExtensions.PickObject(picker, "请选择要标注尺寸的对象（完成后按ESC键）");
-                        if (pickResult != null)
-                        {
-                            selectedObjects.Add(pickResult);
-                            Logger.Log($"添加对象：{pickResult.GetType().Name}");
-                        }
-                        else
-                        {
-                            continueSelecting = false;
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        continueSelecting = false;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError("选择对象时出错", ex);
-                MessageBox.Show($"选择对象时出错: {ex.Message}");
-            }
-            
-            return selectedObjects;
         }
         
         /// <summary>
@@ -243,22 +251,18 @@ namespace SEI_Quick_Dim
                 }
                 else if (obj is Arc arc)
                 {
-                    // 弧的中心是其圆心（通过反射获取）
-                    try
+                    // 尝试使用反射获取圆弧中心点
+                    try 
                     {
-                        var centerProperty = arc.GetType().GetProperty("CenterPoint");
-                        if (centerProperty != null)
+                        PropertyInfo centerProp = arc.GetType().GetProperty("CenterPoint");
+                        if (centerProp != null)
                         {
-                            var center = centerProperty.GetValue(arc) as Point;
-                            if (center != null)
-                            {
-                                return center;
-                            }
+                            return centerProp.GetValue(arc) as Point;
                         }
                     }
                     catch { }
                     
-                    // 如果无法获取中心，使用起点和终点的中点
+                    // 如果反射失败，使用起点和终点的中点
                     return new Point(
                         (arc.StartPoint.X + arc.EndPoint.X) / 2,
                         (arc.StartPoint.Y + arc.EndPoint.Y) / 2,
@@ -267,34 +271,147 @@ namespace SEI_Quick_Dim
                 }
                 else if (obj is Circle circle)
                 {
-                    // 圆的中心是其圆心（通过反射获取）
-                    try
+                    // 尝试使用反射获取圆心
+                    try 
                     {
-                        var centerProperty = circle.GetType().GetProperty("CenterPoint");
-                        if (centerProperty != null)
+                        PropertyInfo centerProp = circle.GetType().GetProperty("CenterPoint");
+                        if (centerProp != null)
                         {
-                            var center = centerProperty.GetValue(circle) as Point;
-                            if (center != null)
-                            {
-                                return center;
-                            }
+                            return centerProp.GetValue(circle) as Point;
                         }
                     }
                     catch { }
                 }
                 else if (obj is Rectangle rect)
                 {
-                    // 尝试通过反射获取矩形的边界点
+                    // 尝试使用反射获取矩形的角点
+                    try 
+                    {
+                        PropertyInfo cornerPointsProp = rect.GetType().GetProperty("CornerPoints");
+                        if (cornerPointsProp != null)
+                        {
+                            var cornerPoints = cornerPointsProp.GetValue(rect) as ArrayList;
+                            if (cornerPoints != null && cornerPoints.Count >= 4)
+                            {
+                                Point p0 = cornerPoints[0] as Point;
+                                Point p2 = cornerPoints[2] as Point;
+                                
+                                if (p0 != null && p2 != null)
+                                {
+                                    return new Point(
+                                        (p0.X + p2.X) / 2,
+                                        (p0.Y + p2.Y) / 2,
+                                        0
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                else if (obj is Polygon polygon)
+                {
+                    // 尝试获取多边形的点集合
+                    try 
+                    {
+                        PropertyInfo pointsProp = polygon.GetType().GetProperty("Points");
+                        if (pointsProp != null)
+                        {
+                            var points = pointsProp.GetValue(polygon) as ArrayList;
+                            if (points != null && points.Count > 0)
+                            {
+                                double sumX = 0;
+                                double sumY = 0;
+                                
+                                foreach (Point point in points)
+                                {
+                                    sumX += point.X;
+                                    sumY += point.Y;
+                                }
+                                
+                                return new Point(sumX / points.Count, sumY / points.Count, 0);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                else if (obj is Grid grid)
+                {
+                    // 对于轴网，使用反射获取标签位置
                     try
                     {
-                        // 尝试获取MinimumPoint和MaximumPoint属性
-                        var minPointProperty = rect.GetType().GetProperty("MinimumPoint");
-                        var maxPointProperty = rect.GetType().GetProperty("MaximumPoint");
-                        
-                        if (minPointProperty != null && maxPointProperty != null)
+                        PropertyInfo labelPosProp = grid.GetType().GetProperty("LabelPosition");
+                        if (labelPosProp != null)
                         {
-                            var minPoint = minPointProperty.GetValue(rect) as Point;
-                            var maxPoint = maxPointProperty.GetValue(rect) as Point;
+                            var labelPos = labelPosProp.GetValue(grid) as Point;
+                            if (labelPos != null)
+                            {
+                                return labelPos;
+                            }
+                        }
+                        
+                        // 如果没有LabelPosition属性，尝试获取轴网线的位置
+                        PropertyInfo lineProp = grid.GetType().GetProperty("GridLine");
+                        if (lineProp != null)
+                        {
+                            var gridLine = lineProp.GetValue(grid) as Line;
+                            if (gridLine != null)
+                            {
+                                return new Point(
+                                    (gridLine.StartPoint.X + gridLine.EndPoint.X) / 2,
+                                    (gridLine.StartPoint.Y + gridLine.EndPoint.Y) / 2,
+                                    0
+                                );
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log($"获取轴网位置时出错: {ex.Message}");
+                    }
+                }
+                else if (obj is ModelObject modelObj)
+                {
+                    // 尝试使用反射获取模型对象的外框
+                    try
+                    {
+                        PropertyInfo outlineProp = modelObj.GetType().GetProperty("BoundingBox");
+                        if (outlineProp != null)
+                        {
+                            var outline = outlineProp.GetValue(modelObj);
+                            PropertyInfo minPointProp = outline.GetType().GetProperty("MinPoint");
+                            PropertyInfo maxPointProp = outline.GetType().GetProperty("MaxPoint");
+                            
+                            if (minPointProp != null && maxPointProp != null)
+                            {
+                                Point minPoint = minPointProp.GetValue(outline) as Point;
+                                Point maxPoint = maxPointProp.GetValue(outline) as Point;
+                                
+                                if (minPoint != null && maxPoint != null)
+                                {
+                                    return new Point(
+                                        (minPoint.X + maxPoint.X) / 2,
+                                        (minPoint.Y + maxPoint.Y) / 2,
+                                        0
+                                    );
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                
+                // 尝试获取对象的最小最大点
+                try
+                {
+                    MethodInfo minMaxPointsMethod = obj.GetType().GetMethod("GetMinMaxPoints");
+                    if (minMaxPointsMethod != null)
+                    {
+                        var minMaxPoints = minMaxPointsMethod.Invoke(obj, null) as ArrayList;
+                        if (minMaxPoints != null && minMaxPoints.Count >= 2)
+                        {
+                            Point minPoint = minMaxPoints[0] as Point;
+                            Point maxPoint = minMaxPoints[1] as Point;
                             
                             if (minPoint != null && maxPoint != null)
                             {
@@ -306,98 +423,10 @@ namespace SEI_Quick_Dim
                             }
                         }
                     }
-                    catch { }
-                }
-                else if (obj is Polygon polygon)
-                {
-                    // 多边形中心计算，尝试通过反射获取点集合
-                    try
-                    {
-                        var pointsProperty = polygon.GetType().GetProperty("Points");
-                        if (pointsProperty != null)
-                        {
-                            var points = pointsProperty.GetValue(polygon);
-                            IEnumerable<Point> pointList = null;
-                            
-                            if (points is IEnumerable<Point> typedPoints)
-                            {
-                                pointList = typedPoints;
-                            }
-                            else if (points is ArrayList arrayList)
-                            {
-                                pointList = arrayList.Cast<Point>();
-                            }
-                            
-                            if (pointList != null && pointList.Any())
-                            {
-                                double sumX = 0;
-                                double sumY = 0;
-                                int count = 0;
-                                
-                                foreach (Point point in pointList)
-                                {
-                                    sumX += point.X;
-                                    sumY += point.Y;
-                                    count++;
-                                }
-                                
-                                if (count > 0)
-                                {
-                                    return new Point(sumX / count, sumY / count, 0);
-                                }
-                            }
-                        }
-                    }
-                    catch { }
-                }
-                else if (obj is ModelObject modelObj)
-                {
-                    // 模型对象，尝试反射获取中心点
-                    try
-                    {
-                        var centerProperty = modelObj.GetType().GetProperty("Center");
-                        if (centerProperty != null)
-                        {
-                            var center = centerProperty.GetValue(modelObj) as Point;
-                            if (center != null)
-                            {
-                                return center;
-                            }
-                        }
-                        
-                        // 如果没有Center属性，尝试获取位置
-                        var locationProperty = modelObj.GetType().GetProperty("Location");
-                        if (locationProperty != null)
-                        {
-                            var location = locationProperty.GetValue(modelObj) as Point;
-                            if (location != null)
-                            {
-                                return location;
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Log($"获取模型对象中心点失败: {ex.Message}");
-                    }
-                }
-                
-                // 其他对象类型，尝试使用GetCenter方法
-                try
-                {
-                    var getCenterMethod = obj.GetType().GetMethod("GetCenter");
-                    if (getCenterMethod != null)
-                    {
-                        var center = getCenterMethod.Invoke(obj, null) as Point;
-                        if (center != null)
-                        {
-                            return center;
-                        }
-                    }
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log($"调用GetCenter方法失败: {ex.Message}");
+                    Logger.Log($"计算对象中心点时出错: {ex.Message}");
                 }
                 
                 Logger.Log($"无法计算对象中心点: {obj.GetType().Name}");
@@ -425,6 +454,7 @@ namespace SEI_Quick_Dim
                     return null;
                 }
                 
+                // 获取所有视图并检查对象是否在视图中
                 DrawingObjectEnumerator views = activeDrawing.GetSheet().GetAllViews();
                 while (views.MoveNext())
                 {
@@ -432,7 +462,7 @@ namespace SEI_Quick_Dim
                     {
                         try
                         {
-                            // 尝试使用IsObjectInView方法
+                            // 使用反射检查对象是否在视图中
                             MethodInfo isObjectInViewMethod = viewBase.GetType().GetMethod("IsObjectInView");
                             if (isObjectInViewMethod != null)
                             {
@@ -441,12 +471,6 @@ namespace SEI_Quick_Dim
                                 {
                                     return viewBase;
                                 }
-                            }
-                            else
-                            {
-                                // 如果找不到方法，使用其他方式判断
-                                // 例如，检查对象的坐标是否在视图区域内
-                                // 这部分需要根据实际情况完善
                             }
                         }
                         catch (Exception ex)
@@ -462,6 +486,86 @@ namespace SEI_Quick_Dim
             {
                 Logger.LogError("获取对象所在视图出错", ex);
                 return null;
+            }
+        }
+        
+        /// <summary>
+        /// 创建尺寸标注线组
+        /// </summary>
+        private static void CreateDimensionLineSet(List<Point> points, Point dimensionLinePoint, bool isHorizontal, double textHeight, TeklaDrawing.ViewBase view)
+        {
+            if (points.Count < 2)
+            {
+                Logger.Log("点数不足，无法创建尺寸标注。");
+                return;
+            }
+
+            try
+            {
+                // 创建尺寸标注线
+                PointList pointList = new PointList();
+                foreach (var point in points)
+                {
+                    pointList.Add(point);
+                }
+                
+                // 确定尺寸线的位置点（偏移一定距离）
+                Point dimensionPosition = new Point(dimensionLinePoint);
+                double offset = 50; // 偏移量（单位：mm）
+                
+                // 基于所选对象确定放置尺寸线的位置
+                if (isHorizontal)
+                {
+                    // 水平尺寸线，在Y方向上偏移
+                    Point firstPoint = points.First();
+                    Point lastPoint = points.Last();
+                    
+                    if (dimensionPosition.Y < (firstPoint.Y + lastPoint.Y) / 2)
+                    {
+                        // 尺寸线位于对象下方
+                        double minY = points.Min(p => p.Y);
+                        dimensionPosition.Y = minY - offset;
+                    }
+                    else
+                    {
+                        // 尺寸线位于对象上方
+                        double maxY = points.Max(p => p.Y);
+                        dimensionPosition.Y = maxY + offset;
+                    }
+                    
+                    // 确保X坐标在范围内
+                    dimensionPosition.X = (points.First().X + points.Last().X) / 2;
+                }
+                else
+                {
+                    // 垂直尺寸线，在X方向上偏移
+                    Point firstPoint = points.First();
+                    Point lastPoint = points.Last();
+                    
+                    if (dimensionPosition.X < (firstPoint.X + lastPoint.X) / 2)
+                    {
+                        // 尺寸线位于对象左侧
+                        double minX = points.Min(p => p.X);
+                        dimensionPosition.X = minX - offset;
+                    }
+                    else
+                    {
+                        // 尺寸线位于对象右侧
+                        double maxX = points.Max(p => p.X);
+                        dimensionPosition.X = maxX + offset;
+                    }
+                    
+                    // 确保Y坐标在范围内
+                    dimensionPosition.Y = (points.First().Y + points.Last().Y) / 2;
+                }
+                
+                // 回退到手动创建尺寸线（因为DistanceSet可能不可用）
+                CreateFallbackDimension(points, dimensionPosition, isHorizontal, textHeight, view);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("创建尺寸标注组出错", ex);
+                MessageBox.Show($"创建尺寸标注组出错: {ex.Message}");
             }
         }
         

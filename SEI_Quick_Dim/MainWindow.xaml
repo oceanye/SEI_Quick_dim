@@ -42,7 +42,7 @@
         <TextBlock x:Name="StatusTextBlock" Grid.Row="6" Text="" 
                    HorizontalAlignment="Left" Margin="103,10,0,25" FontWeight="Bold" Grid.Column="1"/>
 
-        <TextBlock Grid.Row="7" Text="Tekla 2024 Drawing 标注工具 v1.0" 
+        <TextBlock Grid.Row="7" Text="Tekla 2024 Drawing 标注工具 v3.0" 
                    HorizontalAlignment="Left" Margin="7,10,0,0" Foreground="Gray" Grid.Column="1"/>
     </Grid>
 </Window>
